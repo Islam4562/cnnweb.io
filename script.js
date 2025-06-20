@@ -1,59 +1,71 @@
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 let drawing = false;
+
+// Инициализация холста
 ctx.fillStyle = 'black';
 ctx.fillRect(0, 0, canvas.width, canvas.height);
 ctx.lineWidth = 15;
 ctx.lineCap = 'round';
 ctx.strokeStyle = 'white';
 
-canvas.addEventListener('mousedown', () => drawing = true);
+// Обработчики рисования
+canvas.addEventListener('mousedown', () => { 
+  drawing = true; 
+  ctx.beginPath();
+});
 canvas.addEventListener('mouseup', () => drawing = false);
-canvas.addEventListener('mousemove', draw);
-
-function draw(e) {
+canvas.addEventListener('mousemove', e => {
   if (!drawing) return;
   const rect = canvas.getBoundingClientRect();
   ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
   ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-}
+});
 
+// Кнопка «Очистить»
 document.getElementById('clear-btn').onclick = () => {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 };
 
-let session;
-ort.InferenceSession.create('/Users/islamnashentaev/Desktop/projectX/site_pages/digit_model.onnx').then(s => {
-  session = s;
-  document.getElementById('result').innerText = 'Модель загружена';
-}).catch(err => {
-  console.error(err);
-  document.getElementById('result').innerText = 'Ошибка загрузки модели';
-});
+// Загрузка модели через fetch + ONNX Runtime Web
+let session = null;
+(async () => {
+  try {
+    const resp = await fetch('digit_model.onnx.onnx');
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const buffer = await resp.arrayBuffer();
+    session = await ort.InferenceSession.create(buffer);
+    document.getElementById('result').innerText = 'Модель загружена';
+  } catch (e) {
+    console.error(e);
+    document.getElementById('result').innerText = 'Ошибка загрузки модели';
+  }
+})();
 
+// Кнопка «Распознать»
 document.getElementById('predict-btn').onclick = async () => {
   if (!session) return;
-  // взять пиксели, привести к [1,1,28,28]
-  const imageData = ctx.getImageData(0, 0, 280, 280);
-  // ресайз до 28×28
+  // Ресайз холста до 28×28
   const off = document.createElement('canvas');
-  off.width = 28;
-  off.height = 28;
-  const octx = off.getContext('2d');
-  octx.drawImage(canvas, 0, 0, 28, 28);
-  const img = octx.getImageData(0, 0, 28, 28).data;
-  // подготовить Float32Array
-  const input = new Float32Array(1 * 1 * 28 * 28);
-  for (let i = 0; i < 28*28; i++) {
-    // взять только один канал и нормализовать
-    input[i] = (255 - img[i*4]) / 255;
+  off.width = 28; off.height = 28;
+  off.getContext('2d').drawImage(canvas, 0, 0, 28, 28);
+  const img = off.getContext('2d').getImageData(0, 0, 28, 28).data;
+  
+  // Формирование входного тензора [1,1,28,28]
+  const input = new Float32Array(28 * 28);
+  for (let i = 0; i < 28 * 28; i++) {
+    input[i] = (255 - img[i * 4]) / 255;
   }
-  const tensor = new ort.Tensor('float32', input, [1,1,28,28]);
-  const feeds = { input: tensor };
-  const results = await session.run(feeds);
-  const output = results.output.data;
-  const pred = output.indexOf(Math.max(...output));
-  document.getElementById('result').innerText = `Результат: ${pred}`;
+  const tensor = new ort.Tensor('float32', input, [1, 1, 28, 28]);
+  
+  // Инференс
+  try {
+    const outputMap = await session.run({ input: tensor });
+    const output = outputMap.output.data;
+    const pred = output.indexOf(Math.max(...output));
+    document.getElementById('result').innerText = `Результат: ${pred}`;
+  } catch (e) {
+    console.error(e);
+    document.getElementById('result').innerText = 'Ошибка инференса';
+  }
 };
