@@ -2,22 +2,21 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HDRWeb</title>
+  <title>Распознавание цифр</title>
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>HDRWeb: Handwritten Digit Recognition</h1>
+  <main class="container">
+    <h1>🖌️ Рисуй цифру</h1>
     <canvas id="canvas" width="280" height="280"></canvas>
     <div class="controls">
       <button id="clear-btn">Очистить</button>
       <button id="predict-btn">Распознать</button>
     </div>
-    <div id="result">Загрузка модели...</div>
-  </div>
+    <div id="result" class="result">Загрузка модели...</div>
+  </main>
   <script src="script.js"></script>
 </body>
 </html>
