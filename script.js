@@ -37,8 +37,8 @@ document.getElementById('clear-btn').onclick = () => {
 // Пути для загрузки модели
 const MODEL_PATHS = [
   './digit_model.onnx',
-  'https://cdn.jsdelivr.net/gh/Islam4562/cnnweb.io@main/digit_model.onnx',
-  'https://raw.githack.com/Islam4562/cnnweb.io/main/digit_model.onnx'
+  'https://cdn.jsdelivr.net/gh/Islam4562/cnnweb.io@main/digit_model2.onnx',
+  'https://raw.githack.com/Islam4562/cnnweb.io/main/digit_model2.onnx'
 ];
 
 let session = null;
